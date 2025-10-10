@@ -3,7 +3,7 @@
 - Richard Gao @MrFlyingPizza
 - Jooyoung (Julia) Lee @jylee2033
 - Calvin Weng @yamikazoo
--
+- Aarham Haider @AarhamH
 -
 
 This repository is a template for your CMPT 340 course project.

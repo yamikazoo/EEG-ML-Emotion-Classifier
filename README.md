@@ -1,7 +1,7 @@
 # SFU CMPT 340 Project Template -- Replace with project title
 ## Contributors
 - Richard Gao @MrFlyingPizza
--
+- Jooyoung (Julia) Lee @jylee2033
 -
 -
 -

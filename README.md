@@ -2,7 +2,7 @@
 ## Contributors
 - Richard Gao @MrFlyingPizza
 - Jooyoung (Julia) Lee @jylee2033
--
+- Calvin Weng @yamikazoo
 -
 -
 

@@ -1,4 +1,4 @@
-# EEEC (Electroencephalo Emotional Classifer)
+# EEEC (Electroencephalo-emotional Classifer)
 ## Contributors
 - Richard Gao @MrFlyingPizza
 - Jooyoung (Julia) Lee @jylee2033

@@ -1,4 +1,4 @@
-# SFU CMPT 340 Project Template -- Replace with project title
+# EEEC (Electroencephalo Emotional Classifer)
 ## Contributors
 - Richard Gao @MrFlyingPizza
 - Jooyoung (Julia) Lee @jylee2033

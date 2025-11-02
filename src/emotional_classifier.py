@@ -48,3 +48,28 @@ def extract_features(eeg_reading):
 
   return feature_vector
 
+class EEGDataset(Dataset):
+  def __init__(self, features, labels):
+    self.features = torch.tensor(features, dtype=torch.float32)
+    self.lables = torch.tensor(labels, dtype=torch.long)
+
+  def __len__(self):
+    return len(self.features)
+  
+if __name__ == "__main__":
+  raw_data, raw_labels = load_data(DATA_DIR)
+  
+  print("Extracting features from EEG data...")
+  all_features = np.array([extract_features(reading) for reading in raw_data])
+  all_labels = np.array(raw_labels)
+
+  # --- 3. Create Dataset and Split into Train/Validation ---
+  print("Creating dataset and splitting into training and validation...")
+  full_dataset = EEGDataset(all_features, all_labels)
+  
+  # Split data: 80% for training, 20% for validation
+  train_size = int(0.9 * len(full_dataset))
+  val_size = len(full_dataset) - train_size
+  train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
+  
+  

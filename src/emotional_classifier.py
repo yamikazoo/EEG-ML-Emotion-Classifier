@@ -6,7 +6,7 @@ from tqdm import tqdm
 import os
 import numpy as np
 
-DATA_DIR = "./eeg_raw"
+DATA_DIR = "./EEGEmotions/eeg_raw"
 
 SAMPLING_RATE = 128
 NUM_CHANNELS = 14
@@ -23,15 +23,18 @@ def load_data(data_dir):
   all_files = os.listdir(data_dir)
   eeg_data_list = []
   labels_list = []
-  print = (f"Found {len(all_files)} files. Loading data...")
+  print(f"Found {len(all_files)} files. Loading data...")
 
   for filename in tqdm(all_files):
-    if filename.endswitch(".txt"):
+    if filename.endswith(".txt"):
       try:
         parts = filename.split('_')
         emotion_id = int(float(parts[1].replace('.txt','')))
         file_path = os.path.join(data_dir, filename)
         single_reading = np.loadtxt(file_path)
+        if single_reading.ndim != 2 or single_reading.shape[0] < 10:
+          print(f"\n[WARNING] Skipping malformed or empty file: {filename}")
+          continue
         eeg_data_list.append(single_reading)
         labels_list.append(emotion_id - 1)
       except Exception as e:
@@ -51,10 +54,13 @@ def extract_features(eeg_reading):
 class EEGDataset(Dataset):
   def __init__(self, features, labels):
     self.features = torch.tensor(features, dtype=torch.float32)
-    self.lables = torch.tensor(labels, dtype=torch.long)
+    self.labels = torch.tensor(labels, dtype=torch.long)
 
   def __len__(self):
     return len(self.features)
+  
+  def __getitem__(self, idx):
+    return self.features[idx], self.labels[idx]
 
 class EEGNet(nn.Module):
   """A simple Neural Network for EEG classification."""
@@ -90,7 +96,7 @@ if __name__ == "__main__":
   train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
   val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-  print("Initialize model, loss function and optimizer")
+  print("Initializing model, loss function and optimizer")
   input_feature_count = all_features.shape[1]
   model = EEGNet(input_features=input_feature_count, num_classes=NUM_EMOTIONS).to(device)
 

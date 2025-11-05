@@ -58,22 +58,28 @@ repository
 ├── scripts                      ## scripts, if needed
 ├── docs                         ## If needed, documentation   
 ├── README.md                    ## You are here
-├── requirements.yml             ## If you use conda
+├── requirements.txt             ## If you use conda
 ```
 
 <a name="installation"></a>
 
 ## 2. Installation
 
-Provide sufficient instructions to reproduce and install your project. 
-Provide _exact_ versions, test on CSIL or reference workstations.
+Install the project.
 
-```bash
-git clone $THISREPO
-cd $THISREPO
-conda env create -f requirements.yml
-conda activate amazing
-```
+1. Create the virtual environment
+   ```shell
+   python -m venv .venv
+   ```
+2. Install dependencies using the requirements file.
+   ```shell
+   pip install -r requirements.txt
+   ```
+3. If you update the dependencies, remember to freeze it and commit the changes to the requirements.txt everytime.
+   ```shell
+   pip freeze > requirements.txt
+   ```
+
 
 <a name="repro"></a>
 ## 3. Reproduction

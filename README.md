@@ -13,14 +13,8 @@ Add a 1-2 line summary of your project here.
 
 ## Important Links
 
-| [Timesheet](https://google.com) | [Slack channel](https://google.com) | [Project report](https://google.com) |
+| [Timesheet](https://1sfu-my.sharepoint.com/:x:/g/personal/hamarneh_sfu_ca/ETNOAUV8d3pLla21L8OfzlkBIbjm6ZrE9dPXMvCE2adCcQ) | [Slack channel](https://cmpt340fall2025.slack.com/archives/C09F0NR7QHZ) | [Project report](https://www.overleaf.com/9314115499gkgmhkrgjdzm#801001) |
 |-----------|---------------|-------------------------|
-
-
-- Timesheet: Link your timesheet (pinned in your project's Slack channel) where you track per student the time and tasks completed/participated for this project/
-- Slack channel: Link your private Slack project channel.
-- Project report: Link your Overleaf project report document.
-
 
 ## Video/demo/GIF
 Record a short video (1:40 - 2 minutes maximum) or gif or a simple screen recording or even using PowerPoint with audio or with text, showcasing your work.

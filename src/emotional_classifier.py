@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
+from torch.optim.lr_scheduler import ReduceLROnPlateau # NEW IMPORT
 from tqdm import tqdm
 import os
 import numpy as np
@@ -11,39 +12,33 @@ from sklearn.model_selection import train_test_split
 
 # configuration
 LEARNING_RATE = 0.001
+WEIGHT_DECAY = 1e-5 
 BATCH_SIZE = 32
-NUM_EPOCHS = 50
+NUM_EPOCHS = 100
 NUM_EMOTIONS = 27
 NUM_CHANNELS = 14
 CSV_FILE_PATH = "./EEGEmotions/training/eeg_features_extracted.csv" 
+MODEL_SAVE_PATH = "best_cnn_model.pth"
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+
 class EEGDataset(Dataset):
   def __init__(self, features, labels, num_channels=14):
     num_samples = features.shape[0]
     num_total_features = features.shape[1]
-    
-    # Calculate how many features there are per channel
-    # e.g., 434 total features / 14 channels = 31 features per channel
     self.num_features_per_channel = num_total_features // num_channels
     if num_total_features % num_channels != 0:
         raise ValueError("Total feature count is not divisible by num_channels")
 
-    # Reshape the data
-    # 1. Start with (num_samples, num_total_features)
-    # 2. Reshape to (num_samples, num_channels, num_features_per_channel)
-    #    This groups the features by channel.
     features_grouped_by_channel = features.reshape(
         num_samples, num_channels, self.num_features_per_channel
     )
-    
-    # 3. Transpose to (num_samples, num_features_per_channel, num_channels)
-    #    This is the format our 1D CNN expects: (N, C_in, L_in)
-    #    N = Batch Size
-    #    C_in = 31 (features like alpha, beta, etc.)
-    #    L_in = 14 (the "length" we convolve over, i.e., the channels)
     features_transposed = features_grouped_by_channel.transpose(0, 2, 1)
+
     self.features = torch.tensor(features_transposed, dtype=torch.float32)
     self.labels = torch.tensor(labels, dtype=torch.long)
+    print(f"Dataset shape: {self.features.shape}")
 
   def __len__(self):
     return len(self.features)
@@ -54,28 +49,22 @@ class EEGDataset(Dataset):
 class EEG_CNN_Model(nn.Module):
   def __init__(self, num_features, num_channels, num_classes):
     super(EEG_CNN_Model, self).__init__()
+    
     self.conv_block1 = nn.Sequential(
-        nn.Conv1d(in_channels=num_features, 
-                  out_channels=64, 
-                  kernel_size=3, 
-                  stride=1, 
-                  padding=1),
+        nn.Conv1d(in_channels=num_features, out_channels=64, kernel_size=3, stride=1, padding=1),
         nn.ReLU(),
         nn.BatchNorm1d(64)
     )
     
     self.conv_block2 = nn.Sequential(
-        nn.Conv1d(in_channels=64, 
-                  out_channels=128, 
-                  kernel_size=3, 
-                  stride=1, 
-                  padding=1),
+        nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
         nn.ReLU(),
         nn.BatchNorm1d(128)
     )
     
     self.global_avg_pool = nn.AdaptiveAvgPool1d(1)
     self.flatten = nn.Flatten()
+    
     self.fc = nn.Sequential(
         nn.Linear(128, 64),
         nn.ReLU(),
@@ -110,26 +99,19 @@ if __name__ == "__main__":
   num_total_features = features.shape[1]
   num_features_per_channel = num_total_features // NUM_CHANNELS
   
-  print(f"Successfully loaded {features.shape[0]} samples.")
-  print(f"Found {num_total_features} total features, which is {num_features_per_channel} features per channel.")
+  print(f"Loaded {features.shape[0]} samples. Features per channel: {num_features_per_channel}")
 
-  print("Normalizing features...")
   scaler = StandardScaler()
   features_scaled = scaler.fit_transform(features)
-
-  print("Splitting data into training (90%) and validation (10%)...")
   X_train, X_val, y_train, y_val = train_test_split(
       features_scaled, labels, test_size=0.1, random_state=42, stratify=labels
   )
 
-  print("Creating datasets and dataloaders...")
   train_dataset = EEGDataset(X_train, y_train, num_channels=NUM_CHANNELS)
   val_dataset = EEGDataset(X_val, y_val, num_channels=NUM_CHANNELS)
-  
   train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
   val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-  print("Initializing 1D CNN model...")
   model = EEG_CNN_Model(
       num_features=num_features_per_channel, 
       num_channels=NUM_CHANNELS, 
@@ -137,9 +119,12 @@ if __name__ == "__main__":
   ).to(device)
 
   criterion = nn.CrossEntropyLoss()
-  optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
-
+  optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
+  scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5)
+  best_val_loss = float('inf')
+  
   print("\nStarting model training...")
+
   for epoch in range(NUM_EPOCHS):
     model.train()
     running_loss = 0.0
@@ -155,6 +140,7 @@ if __name__ == "__main__":
       optimizer.step()
       running_loss += loss.item()
 
+    # validation
     model.eval()
     correct = 0
     total = 0
@@ -176,10 +162,18 @@ if __name__ == "__main__":
     train_loss_avg = running_loss / len(train_loader)
     val_loss_avg = val_loss / len(val_loader)
     accuracy = 100 * correct / total
+    scheduler.step(val_loss_avg) 
+
+    if val_loss_avg < best_val_loss:
+        print(f"Validation loss improved from {best_val_loss:.4f} to {val_loss_avg:.4f}. Saving model...")
+        best_val_loss = val_loss_avg
+        torch.save(model.state_dict(), MODEL_SAVE_PATH)
     
     print(f"Epoch [{epoch+1}/{NUM_EPOCHS}] | "
           f"Train Loss: {train_loss_avg:.4f} | "
           f"Val Loss: {val_loss_avg:.4f} | "
-          f"Val Accuracy: {accuracy:.2f}%")
+          f"Val Accuracy: {accuracy:.2f}% | "
+          f"Current LR: {optimizer.param_groups[0]['lr']:.6f}")
 
   print("\nFinished Training!")
+  print(f"Best model weights saved to {MODEL_SAVE_PATH}")

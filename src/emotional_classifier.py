@@ -44,22 +44,64 @@ class EEGNet(nn.Module):
     return x
   
 if __name__ == "__main__":
-  raw_data, raw_labels = load_data(DATA_DIR)
-  
-  print("Extracting features from EEG data...")
-  all_features = np.array([extract_features(reading) for reading in raw_data])
-  all_labels = np.array(raw_labels)
+    
+  print(f"Loading pre-extracted features from {CSV_FILE_PATH}...")
+  try:
+    data = pd.read_csv(CSV_FILE_PATH)
+  except FileNotFoundError:
+    print(f"[ERROR] CSV file not found at: {CSV_FILE_PATH}")
+    print("Please make sure the file is in the same directory as the script.")
+    exit()
 
-  # --- 3. Create Dataset and Split into Train/Validation ---
-  print("Creating dataset and splitting into training and validation...")
-  full_dataset = EEGDataset(all_features, all_labels)
-  train_size = int(0.9 * len(full_dataset))
-  val_size = len(full_dataset) - train_size
-  train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
+  data = data.dropna()
   
-  print("Creating dataloaders... ")
-  train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-  val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
+  if 'Emo_Label_Cowen(27)' not in data.columns:
+      print("[ERROR] 'Emo_Label_Cowen(27)' column not found in CSV.")
+      exit()
+
+  # create 0-based indexing for labels
+  labels = data['Emo_Label_Cowen(27)'].values - 1
+
+  metadata_cols = ['Emo_Label_Ekman(6)', 'Emo_Label_Cowen(27)', 
+                   'ParticipantID', 'Age', 'Gender', 'Nation', 
+                   'eeg_component_number']
+  
+  feature_columns = [col for col in data.columns if col not in metadata_cols]
+  features = data[feature_columns].apply(pd.to_numeric, errors='coerce').values
+  
+  print(f"Successfully loaded {features.shape[0]} samples.")
+  print(f"Each sample has {features.shape[1]} features.")
+
+  print("Normalizing features (Standard Scaling)...")
+  scaler = StandardScaler()
+  features_scaled = scaler.fit_transform(features)
+
+  print("Splitting data into training (90%) and validation (10%)...")
+  X_train, X_val, y_train, y_val = train_test_split(
+      features_scaled, 
+      labels, 
+      test_size=0.1,
+      random_state=42,
+      stratify=labels
+  )
+
+  print("Creating datasets and dataloaders...")
+  train_dataset = EEGDataset(X_train, y_train)
+  val_dataset = EEGDataset(X_val, y_val)
+
+  # define num of workers to increase performance 
+  train_loader = DataLoader(
+      train_dataset, 
+      batch_size=BATCH_SIZE, 
+      shuffle=True, 
+      num_workers=os.cpu_count() // 2 
+  )
+  val_loader = DataLoader(
+      val_dataset, 
+      batch_size=BATCH_SIZE, 
+      shuffle=False, 
+      num_workers=os.cpu_count() // 2
+  )
 
   print("Initializing model, loss function and optimizer")
   input_feature_count = all_features.shape[1]

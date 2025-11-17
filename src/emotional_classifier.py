@@ -1,21 +1,20 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader, random_split
+from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 import os
 import numpy as np
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
-DATA_DIR = "./EEGEmotions/eeg_raw"
-
-SAMPLING_RATE = 128
-NUM_CHANNELS = 14
-NUM_EMOTIONS = 27
-
+# configuration
 LEARNING_RATE = 0.001
 BATCH_SIZE = 32
 NUM_EPOCHS = 50
-
+NUM_EMOTIONS = 27
+CSV_FILE_PATH = "./EEGEmotions/training/eeg_features_extracted.csv" 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 

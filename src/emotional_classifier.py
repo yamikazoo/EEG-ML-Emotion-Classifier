@@ -14,11 +14,35 @@ LEARNING_RATE = 0.001
 BATCH_SIZE = 32
 NUM_EPOCHS = 50
 NUM_EMOTIONS = 27
+NUM_CHANNELS = 14
 CSV_FILE_PATH = "./EEGEmotions/training/eeg_features_extracted.csv" 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class EEGDataset(Dataset):
-  def __init__(self, features, labels):
-    self.features = torch.tensor(features, dtype=torch.float32)
+  def __init__(self, features, labels, num_channels=14):
+    num_samples = features.shape[0]
+    num_total_features = features.shape[1]
+    
+    # Calculate how many features there are per channel
+    # e.g., 434 total features / 14 channels = 31 features per channel
+    self.num_features_per_channel = num_total_features // num_channels
+    if num_total_features % num_channels != 0:
+        raise ValueError("Total feature count is not divisible by num_channels")
+
+    # Reshape the data
+    # 1. Start with (num_samples, num_total_features)
+    # 2. Reshape to (num_samples, num_channels, num_features_per_channel)
+    #    This groups the features by channel.
+    features_grouped_by_channel = features.reshape(
+        num_samples, num_channels, self.num_features_per_channel
+    )
+    
+    # 3. Transpose to (num_samples, num_features_per_channel, num_channels)
+    #    This is the format our 1D CNN expects: (N, C_in, L_in)
+    #    N = Batch Size
+    #    C_in = 31 (features like alpha, beta, etc.)
+    #    L_in = 14 (the "length" we convolve over, i.e., the channels)
+    features_transposed = features_grouped_by_channel.transpose(0, 2, 1)
+    self.features = torch.tensor(features_transposed, dtype=torch.float32)
     self.labels = torch.tensor(labels, dtype=torch.long)
 
   def __len__(self):
@@ -27,20 +51,44 @@ class EEGDataset(Dataset):
   def __getitem__(self, idx):
     return self.features[idx], self.labels[idx]
 
-class EEGNet(nn.Module):
-  """A simple Neural Network for EEG classification."""
-  def __init__(self, input_features, num_classes):
-    super(EEGNet, self).__init__()
-    self.layer1 = nn.Linear(input_features, 128)
-    self.relu1 = nn.ReLU()
-    self.layer2 = nn.Linear(128, 64)
-    self.relu2 = nn.ReLU()
-    self.output_layer = nn.Linear(64, num_classes)
+class EEG_CNN_Model(nn.Module):
+  def __init__(self, num_features, num_channels, num_classes):
+    super(EEG_CNN_Model, self).__init__()
+    self.conv_block1 = nn.Sequential(
+        nn.Conv1d(in_channels=num_features, 
+                  out_channels=64, 
+                  kernel_size=3, 
+                  stride=1, 
+                  padding=1),
+        nn.ReLU(),
+        nn.BatchNorm1d(64)
+    )
+    
+    self.conv_block2 = nn.Sequential(
+        nn.Conv1d(in_channels=64, 
+                  out_channels=128, 
+                  kernel_size=3, 
+                  stride=1, 
+                  padding=1),
+        nn.ReLU(),
+        nn.BatchNorm1d(128)
+    )
+    
+    self.global_avg_pool = nn.AdaptiveAvgPool1d(1)
+    self.flatten = nn.Flatten()
+    self.fc = nn.Sequential(
+        nn.Linear(128, 64),
+        nn.ReLU(),
+        nn.Dropout(0.5),
+        nn.Linear(64, num_classes)
+    )
 
   def forward(self, x):
-    x = self.relu1(self.layer1(x))
-    x = self.relu2(self.layer2(x))
-    x = self.output_layer(x)
+    x = self.conv_block1(x)
+    x = self.conv_block2(x)
+    x = self.global_avg_pool(x)
+    x = self.flatten(x)
+    x = self.fc(x)
     return x
 
 if __name__ == "__main__":
@@ -50,62 +98,43 @@ if __name__ == "__main__":
     data = pd.read_csv(CSV_FILE_PATH)
   except FileNotFoundError:
     print(f"[ERROR] CSV file not found at: {CSV_FILE_PATH}")
-    print("Please make sure the file is in the same directory as the script.")
     exit()
 
   data = data.dropna()
-  
-  if 'Emo_Label_Cowen(27)' not in data.columns:
-      print("[ERROR] 'Emo_Label_Cowen(27)' column not found in CSV.")
-      exit()
-
-  # create 0-based indexing for labels
   labels = data['Emo_Label_Cowen(27)'].values - 1
-
   metadata_cols = ['Emo_Label_Ekman(6)', 'Emo_Label_Cowen(27)', 
                    'ParticipantID', 'Age', 'Gender', 'Nation', 
                    'eeg_component_number']
-  
   feature_columns = [col for col in data.columns if col not in metadata_cols]
   features = data[feature_columns].apply(pd.to_numeric, errors='coerce').values
+  num_total_features = features.shape[1]
+  num_features_per_channel = num_total_features // NUM_CHANNELS
   
   print(f"Successfully loaded {features.shape[0]} samples.")
-  print(f"Each sample has {features.shape[1]} features.")
+  print(f"Found {num_total_features} total features, which is {num_features_per_channel} features per channel.")
 
-  print("Normalizing features (Standard Scaling)...")
+  print("Normalizing features...")
   scaler = StandardScaler()
   features_scaled = scaler.fit_transform(features)
 
   print("Splitting data into training (90%) and validation (10%)...")
   X_train, X_val, y_train, y_val = train_test_split(
-      features_scaled, 
-      labels, 
-      test_size=0.1,
-      random_state=42,
-      stratify=labels
+      features_scaled, labels, test_size=0.1, random_state=42, stratify=labels
   )
 
   print("Creating datasets and dataloaders...")
-  train_dataset = EEGDataset(X_train, y_train)
-  val_dataset = EEGDataset(X_val, y_val)
+  train_dataset = EEGDataset(X_train, y_train, num_channels=NUM_CHANNELS)
+  val_dataset = EEGDataset(X_val, y_val, num_channels=NUM_CHANNELS)
+  
+  train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+  val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-  # define num of workers to increase performance 
-  train_loader = DataLoader(
-      train_dataset, 
-      batch_size=BATCH_SIZE, 
-      shuffle=True, 
-      num_workers=os.cpu_count() // 2 
-  )
-  val_loader = DataLoader(
-      val_dataset, 
-      batch_size=BATCH_SIZE, 
-      shuffle=False, 
-      num_workers=os.cpu_count() // 2
-  )
-
-  print("Initializing model, loss function and optimizer")
-  input_feature_count = features.shape[1]
-  model = EEGNet(input_features=input_feature_count, num_classes=NUM_EMOTIONS).to(device)
+  print("Initializing 1D CNN model...")
+  model = EEG_CNN_Model(
+      num_features=num_features_per_channel, 
+      num_channels=NUM_CHANNELS, 
+      num_classes=NUM_EMOTIONS
+  ).to(device)
 
   criterion = nn.CrossEntropyLoss()
   optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
@@ -120,13 +149,10 @@ if __name__ == "__main__":
       labels_batch = labels_batch.to(device)
       
       optimizer.zero_grad()
-      
       outputs = model(features_batch)
       loss = criterion(outputs, labels_batch)
-      
       loss.backward()
       optimizer.step()
-      
       running_loss += loss.item()
 
     model.eval()
@@ -144,15 +170,13 @@ if __name__ == "__main__":
         val_loss += loss.item()
         
         _, predicted = torch.max(outputs.data, 1)
-        
         total += labels_batch.size(0)
         correct += (predicted == labels_batch).sum().item()
 
     train_loss_avg = running_loss / len(train_loader)
     val_loss_avg = val_loss / len(val_loader)
     accuracy = 100 * correct / total
-
-    # print details after training 
+    
     print(f"Epoch [{epoch+1}/{NUM_EPOCHS}] | "
           f"Train Loss: {train_loss_avg:.4f} | "
           f"Val Loss: {val_loss_avg:.4f} | "

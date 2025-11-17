@@ -42,7 +42,7 @@ class EEGNet(nn.Module):
     x = self.relu2(self.layer2(x))
     x = self.output_layer(x)
     return x
-  
+
 if __name__ == "__main__":
     
   print(f"Loading pre-extracted features from {CSV_FILE_PATH}...")
@@ -104,25 +104,25 @@ if __name__ == "__main__":
   )
 
   print("Initializing model, loss function and optimizer")
-  input_feature_count = all_features.shape[1]
+  input_feature_count = features.shape[1]
   model = EEGNet(input_features=input_feature_count, num_classes=NUM_EMOTIONS).to(device)
 
-  criterion = nn.CrossEntropyLoss() # Good for multi-class classification
+  criterion = nn.CrossEntropyLoss()
   optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
   print("\nStarting model training...")
   for epoch in range(NUM_EPOCHS):
-    model.train()  # Set the model to training mode
+    model.train()
     running_loss = 0.0
     
-    for features, labels in train_loader:
-      features = features.to(device)
-      labels = labels.to(device)
+    for features_batch, labels_batch in tqdm(train_loader, desc=f"Epoch {epoch+1}/{NUM_EPOCHS} [Train]"):
+      features_batch = features_batch.to(device)
+      labels_batch = labels_batch.to(device)
       
       optimizer.zero_grad()
       
-      outputs = model(features)
-      loss = criterion(outputs, labels)
+      outputs = model(features_batch)
+      loss = criterion(outputs, labels_batch)
       
       loss.backward()
       optimizer.step()
@@ -132,20 +132,30 @@ if __name__ == "__main__":
     model.eval()
     correct = 0
     total = 0
-    with torch.no_grad(): # No need to calculate gradients during validation
-      for features, labels in val_loader:
-        features = features.to(device)
-        labels = labels.to(device)
+    val_loss = 0.0
+    
+    with torch.no_grad():
+      for features_batch, labels_batch in tqdm(val_loader, desc=f"Epoch {epoch+1}/{NUM_EPOCHS} [Val]  "):
+        features_batch = features_batch.to(device)
+        labels_batch = labels_batch.to(device)
         
-        outputs = model(features)
+        outputs = model(features_batch)
+        loss = criterion(outputs, labels_batch)
+        val_loss += loss.item()
+        
         _, predicted = torch.max(outputs.data, 1)
         
-        total += labels.size(0)
-        correct += (predicted == labels).sum().item()
+        total += labels_batch.size(0)
+        correct += (predicted == labels_batch).sum().item()
 
+    train_loss_avg = running_loss / len(train_loader)
+    val_loss_avg = val_loss / len(val_loader)
     accuracy = 100 * correct / total
-    print(f"Epoch [{epoch+1}/{NUM_EPOCHS}], "
-      f"Loss: {running_loss/len(train_loader):.4f}, "
-      f"Validation Accuracy: {accuracy:.2f}%")
+
+    # print details after training 
+    print(f"Epoch [{epoch+1}/{NUM_EPOCHS}] | "
+          f"Train Loss: {train_loss_avg:.4f} | "
+          f"Val Loss: {val_loss_avg:.4f} | "
+          f"Val Accuracy: {accuracy:.2f}%")
 
   print("\nFinished Training!")

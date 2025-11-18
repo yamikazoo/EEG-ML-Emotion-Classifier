@@ -31,7 +31,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 LEARNING_RATE = 0.001
 WEIGHT_DECAY = 1e-5 
-BATCH_SIZE = 16
+BATCH_SIZE = 64
 NUM_EPOCHS = 100
 NUM_EMOTIONS = 27
 NUM_CHANNELS = 14
@@ -94,13 +94,13 @@ class EEG_CNN_Model(nn.Module):
     super(EEG_CNN_Model, self).__init__()
     
     self.conv_block1 = nn.Sequential(
-        nn.Conv1d(in_channels=num_features, out_channels=64, kernel_size=3, stride=1, padding=1),
+        nn.Conv1d(in_channels=num_features, out_channels=64, kernel_size=5, stride=1, padding=1),
         nn.ReLU(),
         nn.BatchNorm1d(64)
     )
     
     self.conv_block2 = nn.Sequential(
-        nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
+        nn.Conv1d(in_channels=64, out_channels=128, kernel_size=5, stride=1, padding=1),
         nn.ReLU(),
         nn.BatchNorm1d(128)
     )

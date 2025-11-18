@@ -166,3 +166,6 @@ cython_debug/
 EEGEmotions-27
 EEGEmotions
 EEGEmotions/
+
+# CNN best weights path
+best_cnn_model.pth

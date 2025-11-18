@@ -13,10 +13,25 @@ import pandas as pd
 import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning)
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from tqdm import tqdm
+import os
+import numpy as np
+import pandas as pd
+import warnings
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 LEARNING_RATE = 0.001
 WEIGHT_DECAY = 1e-5 
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 NUM_EPOCHS = 100
 NUM_EMOTIONS = 27
 NUM_CHANNELS = 14
@@ -215,9 +230,9 @@ if __name__ == "__main__":
         correct += (predicted == labels_batch).sum().item()
 
     train_loss_avg = running_loss / len(train_loader)
+    training_accuracy = 100 * train_correct / train_total 
     val_loss_avg = val_loss / len(val_loader)
     accuracy = 100 * correct / total
-    train_accuracy = 100 * train_correct / train_total
     scheduler.step(val_loss_avg) 
 
     if val_loss_avg < best_val_loss:
@@ -227,7 +242,7 @@ if __name__ == "__main__":
     
     print(f"Epoch [{epoch+1}/{NUM_EPOCHS}] | "
           f"Train Loss: {train_loss_avg:.4f} | "
-          f"Train Accuracy: {train_accuracy:.2f}% | "
+          f"Training Accuracy: {training_accuracy:.2f}% | "
           f"Val Loss: {val_loss_avg:.4f} | "
           f"Val Accuracy: {accuracy:.2f}% | "
           f"Current LR: {optimizer.param_groups[0]['lr']:.6f}")

@@ -177,7 +177,9 @@ if __name__ == "__main__":
   for epoch in range(NUM_EPOCHS):
     model.train()
     running_loss = 0.0
-    
+    train_correct = 0
+    train_total = 0
+
     for features_batch, labels_batch in tqdm(train_loader, desc=f"Epoch {epoch+1}/{NUM_EPOCHS} [Train]"):
       features_batch = features_batch.to(device)
       labels_batch = labels_batch.to(device)
@@ -188,6 +190,11 @@ if __name__ == "__main__":
       loss.backward()
       optimizer.step()
       running_loss += loss.item()
+
+      _, predicted = torch.max(outputs.data, 1)
+      train_total += labels_batch.size(0)
+      train_correct += (predicted == labels_batch).sum().item()
+
 
     model.eval()
     correct = 0
@@ -210,6 +217,7 @@ if __name__ == "__main__":
     train_loss_avg = running_loss / len(train_loader)
     val_loss_avg = val_loss / len(val_loader)
     accuracy = 100 * correct / total
+    train_accuracy = 100 * train_correct / train_total
     scheduler.step(val_loss_avg) 
 
     if val_loss_avg < best_val_loss:
@@ -219,6 +227,7 @@ if __name__ == "__main__":
     
     print(f"Epoch [{epoch+1}/{NUM_EPOCHS}] | "
           f"Train Loss: {train_loss_avg:.4f} | "
+          f"Train Accuracy: {train_accuracy:.2f}% | "
           f"Val Loss: {val_loss_avg:.4f} | "
           f"Val Accuracy: {accuracy:.2f}% | "
           f"Current LR: {optimizer.param_groups[0]['lr']:.6f}")

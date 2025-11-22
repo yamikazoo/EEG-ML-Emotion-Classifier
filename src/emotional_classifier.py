@@ -40,8 +40,14 @@ MODEL_SAVE_PATH = "best_cnn_model.pth"
 RANDOM_STATE = 42
 SYMMETRIC_PAIRS = [(1, 2), (3, 4), (5, 6), (7, 8), (9, 10), (11, 12), (13, 14)]
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {device}")
+if torch.backends.mps.is_available():
+    device = torch.device("mps")
+elif torch.cuda.is_available():
+    device = torch.device("cuda")
+else:
+    device = torch.device("cpu")
+
+print("Using device:", device)
 
 def create_asymmetry_features(df, symmetric_pairs):
     """Calculates Differential Asymmetry (DA) and Rational Asymmetry (RA) features."""

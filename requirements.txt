@@ -65,6 +65,7 @@ pandas==2.3.3
 pandocfilters==1.5.1
 parso==0.8.5
 pexpect==4.9.0
+pillow==12.0.0
 platformdirs==4.5.0
 prometheus_client==0.23.1
 prompt_toolkit==3.0.52
@@ -96,6 +97,8 @@ terminado==0.18.1
 threadpoolctl==3.6.0
 tinycss2==1.4.0
 torch==2.9.1
+torchaudio==2.9.1
+torchvision==0.24.1
 tornado==6.5.2
 tqdm==4.67.1
 traitlets==5.14.3

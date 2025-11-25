@@ -192,65 +192,65 @@ if __name__ == "__main__":
   optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
   scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5)
   best_val_loss = float('inf')
-  
-  print("\nStep 3: Starting Advanced CNN Training...")
 
-for epoch in range(NUM_EPOCHS):
-    model.train()
-    running_loss = 0.0
-    train_correct = 0
-    train_total = 0
+if __name__ == "__main__":
+    print("\nStep 3: Starting Advanced CNN Training...")
 
-    # Training loop with disappearing progress bar
-    for features_batch, labels_batch in tqdm(train_loader, desc=f"Epoch {epoch+1}/{NUM_EPOCHS} [Train]", leave=False):
-        features_batch = features_batch.to(device)
-        labels_batch = labels_batch.to(device)
+    for epoch in range(NUM_EPOCHS):
+        model.train()
+        running_loss = 0.0
+        train_correct = 0
+        train_total = 0
 
-        optimizer.zero_grad()
-        outputs = model(features_batch)
-        loss = criterion(outputs, labels_batch)
-        loss.backward()
-        optimizer.step()
-
-        running_loss += loss.item()
-        _, predicted = torch.max(outputs.data, 1)
-        train_total += labels_batch.size(0)
-        train_correct += (predicted == labels_batch).sum().item()
-
-    # Validation loop with disappearing progress bar
-    model.eval()
-    val_loss = 0.0
-    correct = 0
-    total = 0
-    with torch.no_grad():
-        for features_batch, labels_batch in tqdm(val_loader, desc=f"Epoch {epoch+1}/{NUM_EPOCHS} [Val]", leave=False):
+        # Training loop with disappearing progress bar
+        for features_batch, labels_batch in tqdm(train_loader, desc=f"Epoch {epoch+1}/{NUM_EPOCHS} [Train]", leave=False):
             features_batch = features_batch.to(device)
             labels_batch = labels_batch.to(device)
 
+            optimizer.zero_grad()
             outputs = model(features_batch)
             loss = criterion(outputs, labels_batch)
-            val_loss += loss.item()
+            loss.backward()
+            optimizer.step()
 
+            running_loss += loss.item()
             _, predicted = torch.max(outputs.data, 1)
-            total += labels_batch.size(0)
-            correct += (predicted == labels_batch).sum().item()
+            train_total += labels_batch.size(0)
+            train_correct += (predicted == labels_batch).sum().item()
 
-    # Calculate metrics
-    train_loss_avg = running_loss / len(train_loader)
-    training_accuracy = 100 * train_correct / train_total
-    val_loss_avg = val_loss / len(val_loader)
-    val_accuracy = 100 * correct / total
-    scheduler.step(val_loss_avg)
+        # Validation loop with disappearing progress bar
+        model.eval()
+        val_loss = 0.0
+        correct = 0
+        total = 0
+        with torch.no_grad():
+            for features_batch, labels_batch in tqdm(val_loader, desc=f"Epoch {epoch+1}/{NUM_EPOCHS} [Val]", leave=False):
+                features_batch = features_batch.to(device)
+                labels_batch = labels_batch.to(device)
 
-    # Save best model
-    if val_loss_avg < best_val_loss:
-        print(f"Validation loss improved from {best_val_loss:.4f} to {val_loss_avg:.4f}. Saving model...")
-        best_val_loss = val_loss_avg
-        torch.save(model.state_dict(), MODEL_SAVE_PATH)
+                outputs = model(features_batch)
+                loss = criterion(outputs, labels_batch)
+                val_loss += loss.item()
 
-    # Print epoch summary (after progress bars)
-    print(f"Epoch [{epoch+1}/{NUM_EPOCHS}] | "
-          f"Train Loss: {train_loss_avg:.4f} | Train Acc: {training_accuracy:.2f}% | "
-          f"Val Loss: {val_loss_avg:.4f} | Val Acc: {val_accuracy:.2f}% | "
-          f"LR: {optimizer.param_groups[0]['lr']:.6f}")
-                                                                                                  
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels_batch.size(0)
+                correct += (predicted == labels_batch).sum().item()
+
+        # Calculate metrics
+        train_loss_avg = running_loss / len(train_loader)
+        training_accuracy = 100 * train_correct / train_total
+        val_loss_avg = val_loss / len(val_loader)
+        val_accuracy = 100 * correct / total
+        scheduler.step(val_loss_avg)
+
+        # Save best model
+        if val_loss_avg < best_val_loss:
+            print(f"Validation loss improved from {best_val_loss:.4f} to {val_loss_avg:.4f}. Saving model...")
+            best_val_loss = val_loss_avg
+            torch.save(model.state_dict(), MODEL_SAVE_PATH)
+
+        # Print epoch summary (after progress bars)
+        print(f"Epoch [{epoch+1}/{NUM_EPOCHS}] | "
+            f"Train Loss: {train_loss_avg:.4f} | Train Acc: {training_accuracy:.2f}% | "
+            f"Val Loss: {val_loss_avg:.4f} | Val Acc: {val_accuracy:.2f}% | "
+            f"LR: {optimizer.param_groups[0]['lr']:.6f}")

@@ -65,6 +65,16 @@ Install the project.
    ```shell
    python -m venv .venv
    ```
+2. Activate the virtual environment
+
+    **macOS / Linux**
+   ```shell
+   source .venv/bin/activate
+   ```
+    **Windows**
+   ```shell
+    .venv\Scripts\activate
+   ```
 2. Install dependencies using the requirements file.
    ```shell
    pip install -r requirements.txt

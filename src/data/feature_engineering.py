@@ -1,6 +1,11 @@
 
 import numpy as np
 import pandas as pd
+from sklearn.discriminant_analysis import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+
+from config import Config
 
 def create_asymmetry_features(df, symmetric_pairs):
     """Calculates Differential Asymmetry (DA) and Rational Asymmetry (RA) features."""
@@ -23,3 +28,35 @@ def create_asymmetry_features(df, symmetric_pairs):
     asymmetry_df = pd.DataFrame(asymmetry_features, index=df.index)
     
     return pd.concat([df[all_features], asymmetry_df], axis=1)
+
+def select_important_features(features, labels, feature_names):
+    print("Step 1: Feature Selection using Random Forest...")
+
+    scaler = StandardScaler()
+    features_scaled = scaler.fit_transform(features)
+
+    X_train_rf, _, y_train_rf, _ = train_test_split(
+        features_scaled, labels, test_size=0.2,
+        random_state=Config.RANDOM_STATE, stratify=labels
+    )
+
+    rf = RandomForestClassifier(
+        n_estimators=100,
+        random_state=Config.RANDOM_STATE,
+        n_jobs=-1,
+        class_weight="balanced"
+    )
+    rf.fit(X_train_rf, y_train_rf)
+
+    importance = rf.feature_importances_
+
+    df = pd.DataFrame({
+        "Feature": feature_names,
+        "Importance": importance
+    }).sort_values(by="Importance", ascending=False)
+
+    cutoff_index = int(len(df) * 0.75)
+    selected = df["Feature"].head(cutoff_index).tolist()
+
+    print(f"Selected {len(selected)} features using RF importance.")
+    return selected

@@ -546,18 +546,17 @@ def main():
                 fn=predict_uploaded_file,
                 inputs=file_input,
                 outputs=[output_label_2, output_text_2],
-                title="Upload Your EEG Data",
+                title="EEG Emotion Classifier",
                 description=(
-                    "Upload a file containing EEG data:\n\n"
-                    "**CSV Format (Recommended):** Pre-extracted features matching the training data format.\n"
+                    "Upload a file containing EEG data.\n\n"
+                    "It must be in **CSV Format** with pre-extracted features matching the format of the training data:\n"
                     "- 14 channels with ~35 features each per sample\n"
                     "- Asymmetry features computed automatically\n\n"
-                    "**TXT Format:** Raw EEG recordings will show instructions for feature extraction.\n\n"
-                    "The model will predict emotions for all samples in the uploaded file."
+                    "The model will present a detailed confidence distribution for the first sample, along with confidence scores for the rest of the samples."
                 ),
             ),
         ],
-        tab_names=["Training Data Viewer", "Upload & Predict"],
+        tab_names=["Training Data Viewer", "User Upload Prediction"],
     )
 
     demo.launch()

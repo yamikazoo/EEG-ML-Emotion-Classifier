@@ -513,51 +513,78 @@ def main():
         lines=6,
     )
 
-    # Tab 2: Upload file for prediction
-    file_input = gr.File(
-        label="Upload EEG Data File",
-        file_types=[".csv", ".txt"],
-    )
-
-    output_label_2 = gr.Label(
-        num_top_classes=5,
-        label="Predicted Emotion Probabilities (First Sample)",
-    )
-
-    output_text_2 = gr.Textbox(
-        label="Prediction Results",
-        lines=10,
-    )
-
-    # Create tabbed interface
-    demo = gr.TabbedInterface(
-        [
-            gr.Interface(
-                fn=predict_uploaded_file,
-                inputs=file_input,
-                outputs=[output_label_2, output_text_2],
-                title="EEG Emotion Classifier",
-                description=(
+    # Create tabbed interface with Blocks for better layout control
+    with gr.Blocks() as demo:
+        with gr.Tabs():
+            with gr.Tab("User Upload Prediction"):
+                gr.Markdown("# EEG Emotion Classifier")
+                gr.Markdown(
                     "Upload a file containing EEG data.\n\n"
-                    "It must be in **CSV Format** with pre-extracted features matching the format of the training data:\n"
+                    "It must be in **CSV Format** with pre-extracted features matching the format of the training data (refer to sample dataset):\n"
                     "- 14 channels with ~35 features each per sample\n"
                     "- Asymmetry features computed automatically\n\n"
-                    "The model will present a detailed confidence distribution for the first sample, along with confidence scores for the rest of the samples."
-                ),
-            ),
-            gr.Interface(
-                fn=predict,
-                inputs=index_input,
-                outputs=[output_label, output_text],
-                title="Browse Training Data Samples",
-                description=(
+                    "The model will present a detailed confidence distribution for the first sample, along with confidence scores for the rest of the samples.\n\n"
+                    "Below is a sample dataset you can download and test with."
+                )
+                
+                # Sample download file placed right after description
+                sample_file = gr.File(
+                    label="Sample Dataset",
+                    value="src/data/sample_eeg_dataset.csv",
+                    interactive=False,
+                )
+                
+                # Upload section
+                file_input = gr.File(
+                    label="Upload EEG Data File",
+                    file_types=[".csv", ".txt"],
+                )
+                
+                # Outputs
+                output_label_2 = gr.Label(
+                    num_top_classes=5,
+                    label="Predicted Emotion Confidence Distribution (First Sample)",
+                )
+                output_text_2 = gr.Textbox(
+                    label="Prediction Results (Following Samples)",
+                    lines=10,
+                )
+                
+                file_input.change(
+                    fn=predict_uploaded_file,
+                    inputs=file_input,
+                    outputs=[output_label_2, output_text_2]
+                )
+            
+            with gr.Tab("Training Data Viewer"):
+                gr.Markdown("# Browse Training Data Samples")
+                gr.Markdown(
                     "Select the N-th sample from the `eeg_features_extracted.csv` file to see how the trained CNN model predicts its emotion.\n\n"
                     "The interface also displays the Participant ID and Cowen (27-class), along with the model's prediction."
-                ),
-            ),
-        ],
-        tab_names=["User Upload Prediction", "Training Data Viewer"],
-    )
+                )
+                
+                index_input_tab = gr.Slider(
+                    minimum=0,
+                    maximum=(num_samples - 1) if num_samples is not None else 100,
+                    step=1,
+                    value=0,
+                    label="Sample Index (0-based)",
+                )
+                
+                output_label_tab = gr.Label(
+                    num_top_classes=5,
+                    label="Predicted Emotion Probabilities",
+                )
+                output_text_tab = gr.Textbox(
+                    label="Sample Info (Participant / Labels / Prediction)",
+                    lines=6,
+                )
+                
+                index_input_tab.change(
+                    fn=predict,
+                    inputs=index_input_tab,
+                    outputs=[output_label_tab, output_text_tab]
+                )
 
     demo.launch()
 

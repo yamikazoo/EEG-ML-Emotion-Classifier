@@ -12,6 +12,7 @@ class Config:
     MODEL_SAVE_PATH = "best_cnn_model.pth"
     RANDOM_STATE = 42
     SYMMETRIC_PAIRS = [(1, 2), (3, 4), (5, 6), (7, 8), (9, 10), (11, 12), (13, 14)]
+    PLOT_DIR = "./plots"
 
     def get_device():
         if torch.backends.mps.is_available():

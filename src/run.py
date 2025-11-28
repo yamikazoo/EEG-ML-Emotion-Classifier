@@ -533,16 +533,6 @@ def main():
     demo = gr.TabbedInterface(
         [
             gr.Interface(
-                fn=predict,
-                inputs=index_input,
-                outputs=[output_label, output_text],
-                title="Browse Training Data Samples",
-                description=(
-                    "Select the N-th sample from the `eeg_features_extracted.csv` file to see how the trained CNN model predicts its emotion.\n\n"
-                    "The interface also displays the Participant ID and Cowen (27-class), along with the model's prediction."
-                ),
-            ),
-            gr.Interface(
                 fn=predict_uploaded_file,
                 inputs=file_input,
                 outputs=[output_label_2, output_text_2],
@@ -555,8 +545,18 @@ def main():
                     "The model will present a detailed confidence distribution for the first sample, along with confidence scores for the rest of the samples."
                 ),
             ),
+            gr.Interface(
+                fn=predict,
+                inputs=index_input,
+                outputs=[output_label, output_text],
+                title="Browse Training Data Samples",
+                description=(
+                    "Select the N-th sample from the `eeg_features_extracted.csv` file to see how the trained CNN model predicts its emotion.\n\n"
+                    "The interface also displays the Participant ID and Cowen (27-class), along with the model's prediction."
+                ),
+            ),
         ],
-        tab_names=["Training Data Viewer", "User Upload Prediction"],
+        tab_names=["User Upload Prediction", "Training Data Viewer"],
     )
 
     demo.launch()

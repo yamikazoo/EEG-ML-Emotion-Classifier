@@ -169,3 +169,6 @@ EEGEmotions/
 
 # CNN best weights path
 best_cnn_model.pth
+
+eeg_features_extracted.csv
+plots/

@@ -1,10 +1,10 @@
 
 import torch
 from torch.utils.data import Dataset
-from config import NUM_CHANNELS
+from config import Config
 
 class EEGDataset(Dataset):
-  def __init__(self, features, labels, num_channels=NUM_CHANNELS):
+  def __init__(self, features, labels, num_channels=Config.NUM_CHANNELS):
     num_samples = features.shape[0]
     num_total_features = features.shape[1]
     

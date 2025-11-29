@@ -67,7 +67,7 @@ Install the project.
    ```shell
    python -m venv .venv
    ```
-2. Activate the virtual environment
+2. Activate the virtual environment (this may take a while on CSIL)
 
     **macOS / Linux**
    ```shell
@@ -77,7 +77,7 @@ Install the project.
    ```shell
     .venv\Scripts\activate
    ```
-2. Install dependencies using the requirements file.
+2. Install dependencies using the requirements file (there are many to install so this may take additional time). 
    ```shell
    pip install -r requirements.txt
    ```

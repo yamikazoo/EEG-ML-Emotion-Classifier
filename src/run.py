@@ -17,8 +17,8 @@ NUM_EMOTIONS = Config.NUM_EMOTIONS
 NUM_CHANNELS = Config.NUM_CHANNELS
 SYMMETRIC_PAIRS = Config.SYMMETRIC_PAIRS
 
-CSV_FILE_PATH = "EEGEmotions-27/training/eeg_features_extracted.csv"
-MODEL_PATH = "best_cnn_model.pth"
+CSV_FILE_PATH = Config.CSV_FILE_PATH
+MODEL_PATH = Config.MODEL_SAVE_PATH
 
 EMOTIONS = [
     "admiration", "adoration", "aesthetic appreciation", "amusement", "anger",

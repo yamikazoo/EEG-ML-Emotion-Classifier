@@ -123,4 +123,58 @@ After training has completed, a set of charts will be created under `plots/` for
 
 Data can be found at: [https://github.com/huytungst/EEGEmotions-27](https://github.com/huytungst/EEGEmotions-27)
 
-Output will be saved in: `src/best_cnn_model.pth` (our model with the best model weights)
+Output will be saved in: `best_cnn_model.pth` (our model with the best model weights)
+
+<a name="gradio"></a>
+## 4. Using the Gradio Web Interface
+
+After training the model, you can use the interactive Gradio web application to make predictions on new EEG data.
+
+### Running the Application
+
+1. Ensure your virtual environment is activated (see step 2 in Installation)
+
+2. From the project root directory, run:
+   ```bash
+   python src/run.py
+   ```
+
+3. The application will start and display a local URL (typically `http://127.0.0.1:7860`)
+
+4. Open the URL in your web browser
+
+### Using the Interface
+
+The application has two tabs:
+
+#### **User Upload Prediction** (Default Tab)
+Upload your own EEG data files to get emotion predictions.
+
+- **Download Sample Dataset**: Click the download button to get a sample CSV file (`sample_eeg_dataset.csv`) that demonstrates the correct format
+- **Upload EEG Data File**: Upload a CSV file with pre-extracted EEG features
+  - Must contain 14 channels with ~35 features each per sample
+  - Asymmetry features are computed automatically
+  - Supported formats: `.csv`
+- **Results**: The model will display:
+  - Predicted emotion probabilities for the first sample (top 5 emotions shown)
+  - Confidence scores for all uploaded samples (up to 10 samples shown in detail)
+
+#### **Training Data Viewer** (Second Tab)
+Browse predictions on the training dataset to see how the model performs.
+
+- Use the slider to select a sample index (0 to number of samples - 1)
+- View:
+  - Ground truth emotion label from the training data
+  - Model's predicted emotion
+  - Prediction confidence scores (top 5 emotions)
+  - Participant ID and Cowen label information
+
+### CSV Format Requirements
+
+Your uploaded CSV file should match the training data format:
+- **Columns**: Features for 14 EEG channels (e.g., `min_1`, `max_1`, `mean_1`, `ar1_1`, ..., `min_14`, `max_14`, etc.)
+- **Rows**: Each row represents one EEG sample
+- **No labels needed**: The model will predict the emotion labels
+
+**Tip**: Download and examine the sample dataset from the web interface to see the exact format required.
+

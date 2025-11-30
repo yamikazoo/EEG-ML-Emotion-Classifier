@@ -12,8 +12,7 @@
 |-----------|---------------|-------------------------|
 
 ## Video/demo/GIF
-Record a short video (1:40 - 2 minutes maximum) or gif or a simple screen recording or even using PowerPoint with audio or with text, showcasing your work.
-
+https://youtu.be/qVf95Jlxs44 
 
 ## Table of Contents
 1. [Demo](#demo)

@@ -8,7 +8,7 @@ class Config:
     NUM_EPOCHS = 100
     NUM_EMOTIONS = 27
     NUM_CHANNELS = 14
-    CSV_FILE_PATH = "eeg_features_extracted.csv" 
+    CSV_FILE_PATH = "src/eeg_features_extracted.csv" 
     MODEL_SAVE_PATH = "best_cnn_model.pth"
     RANDOM_STATE = 42
     SYMMETRIC_PAIRS = [(1, 2), (3, 4), (5, 6), (7, 8), (9, 10), (11, 12), (13, 14)]

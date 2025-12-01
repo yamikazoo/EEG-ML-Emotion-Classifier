@@ -41,8 +41,6 @@ Sample Charts
 
 ### What to find where
 
-Explain briefly what files are found where
-
 ```bash
 repository
 ├── src                          ## source code of the package itself
@@ -78,7 +76,7 @@ Install the project.
    ```
 2. Install dependencies using the requirements file (there are many to install so this may take additional time). 
    ```shell
-   pip install -r requirements.txt
+   pip install -r requirements.txt <---- this will be found in this repo, so cd into the repo first
    ```
 3. If you update the dependencies, remember to freeze it and commit the changes to the requirements.txt everytime.
    ```shell
@@ -89,11 +87,9 @@ Install the project.
 
 <a name="repro"></a>
 ## 3. Reproduction
-First enable Github SSH (follow the [guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh))
-
-Then clone the repository
+Clone the repository
 ```bash
-git clone git@github.com:huytungst/EEGEmotions-27.git
+git clone https://github.com/huytungst/EEGEmotions-27.git
 cd EEGEmotions-27
 ```
 Windows Powershell
@@ -114,9 +110,9 @@ CSV_FILE_PATH = "eeg_features_extracted.csv" <---- CHANGE YOUR .csv PATH HERE
  ...
 ````
 
-To train the model, simply `cd` into `src/` and run
+To train the model, simply cd into the repo and run
 ````bash
-python main.py 
+python src/main.py 
 ````
 After training has completed, a set of charts will be created under `plots/` for accuracy and loss for training and validation loops, as well as a confusion matrix.
 

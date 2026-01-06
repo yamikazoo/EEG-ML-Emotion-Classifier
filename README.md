@@ -1,4 +1,9 @@
 # EEECDL (Electroencephalo-emotional Classifer via Deep Learning)
+
+This is a deep learning system that classifies human emotions from EEG (electroencephalography) brain signals. Using a custom 1D CNN built with PyTorch, the model analyzes brainwave patterns from 14 EEG channels to predict emotional states across 27 different emotion categories. The system employs feature engineering techniques including statistical feature extraction, asymmetry feature computation, and Random Forest-based feature selection to identify the most discriminative patterns in EEG data. The project includes a complete machine learning pipeline from data preprocessing to model training and evaluation with an interactive Gradio web interface that allows users to upload their own EEG data and receive real-time emotion predictions with confidence scores.
+
+**Key Technologies:** PyTorch, scikit-learn, Pandas, NumPy
+
 ## Contributors
 - Richard Gao @MrFlyingPizza
 - Jooyoung (Julia) Lee @jylee2033
@@ -8,10 +13,10 @@
 
 ## Important Links
 
-| [Timesheet](https://1sfu-my.sharepoint.com/:x:/g/personal/hamarneh_sfu_ca/ETNOAUV8d3pLla21L8OfzlkBIbjm6ZrE9dPXMvCE2adCcQ) | [Slack channel](https://cmpt340fall2025.slack.com/archives/C09F0NR7QHZ) | [Project report](https://www.overleaf.com/9314115499gkgmhkrgjdzm#801001) |
-|-----------|---------------|-------------------------|
+| [Demo Video](https://youtu.be/qVf95Jlxs44 ) | [Project report](https://www.overleaf.com/9314115499gkgmhkrgjdzm#801001) |
+|---------------|-------------------------|
 
-## Video/demo/GIF
+## Video Demonstration
 https://youtu.be/qVf95Jlxs44 
 
 ## Table of Contents
